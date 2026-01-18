@@ -17,7 +17,7 @@ class BookingService {
             const response  =await axios.get(getFlightRequestURL);
             const flightData = response.data.data;
             let priceOfTheFlight = flightData.price;
-            
+
             if(data.noOfSeats > flightData.totalSeats) {
                 throw new ServiceError(
                     'Something went wrong in booking process',
@@ -45,6 +45,35 @@ class BookingService {
             }
             throw new ServiceError();
         }       
+    }
+
+    async cancelBooking(bookingId) {
+        try {
+            const booking = await this.bookingRepository.getById(bookingId);
+            if(booking.status != "Booked") throw "There is no confirmed booking";
+            if(booking.status == "Cancelled") throw "Already booking cancelled!!";
+            
+
+            const getFlightRequestURL= `${FLIGHT_SERVICE_PATH}/api/v1/flights/${booking.flightId}`;
+            const response  =await axios.get(getFlightRequestURL);
+            const flightData = response.data.data;
+
+            const updateFlightRequestURL = `${FLIGHT_SERVICE_PATH}/api/v1/flights/${booking.flightId}`;
+            await axios.patch(updateFlightRequestURL , {totalSeats:flightData.totalSeats+booking.noOfSeats});
+            
+            const priceToReturn = booking.totalCost;
+
+            console.log("Booking----:",booking);
+
+            const finalBooking = await this.bookingRepository.update(bookingId, {status:"Cancelled"});
+            return finalBooking;
+            
+        } catch (error) {
+            if(error.name== "RepositoryError" || error.name=="ValidationError") {
+                throw error;
+            }
+            throw new ServiceError();
+        }
     }
 
 
