@@ -80,3 +80,10 @@ class BookingService {
 }
 
 module.exports = BookingService;
+
+
+
+//booking service need to communicate reminder service
+//  for creating ticket and
+//publish msg "congrats flight is booked"
+//  and a reminder email "your flight is within 24hr"
